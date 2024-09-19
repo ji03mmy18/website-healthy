@@ -1,7 +1,7 @@
 import requests, schedule
 from discord_webhook import DiscordWebhook, DiscordEmbed
 
-import time, logging
+import os, time, logging
 
 FORMAT = '[%(asctime)s]%(levelname)s: %(message)s'
 logging.basicConfig(level=logging.INFO, format=FORMAT)
@@ -77,7 +77,7 @@ class WebsiteMonitor:
             time.sleep(1)
 
 if __name__ == "__main__":
-    discord_webhook_url = "https://discord.com/api/webhooks/1286219091295735869/jwHEZvKQfzGnWkb0gY3DEPLJZa5_tc2kj2HUjKg01YOhgVDuJxFsNYOi0cXjUGHq2XfW"
+    discord_webhook_url = os.environ.get("DC_WEBHOOK_URL")
     monitor = WebsiteMonitor(discord_webhook_url)
     logging.info("Website Healthy Checker Started!")
 
