@@ -1,7 +1,7 @@
 import requests, schedule
 from discord_webhook import DiscordWebhook, DiscordEmbed
 
-import csv, os, time, logging
+import csv, os, re, time, logging
 
 FORMAT = '[%(asctime)s]%(levelname)s: %(message)s'
 logging.basicConfig(level=logging.INFO, format=FORMAT)
@@ -20,11 +20,19 @@ class WebsiteMonitor:
         try:
             response = requests.get(website["url"], timeout=4)
             if response.status_code != 200:
-                self.errors.append({
-                    "name": website["name"],
-                    "url": website["url"],
-                    "status": response.status_code
-                })
+                if response.status_code == 530:
+                    self.errors.append({
+                        "name": website["name"],
+                        "url": website["url"],
+                        "status": response.status_code,
+                        "sub_status": self.parse_cloudflare_error(response.text)
+                    })
+                else:
+                    self.errors.append({
+                        "name": website["name"],
+                        "url": website["url"],
+                        "status": response.status_code
+                    })
         except requests.RequestException as e:
             self.errors.append({
                 "name": website["name"],
@@ -44,10 +52,12 @@ class WebsiteMonitor:
             if idx == 0:
                 embed.add_embed_field(name="名稱", value=err["name"])
                 embed.add_embed_field(name="狀態", value=err["status"])
+                embed.add_embed_field(name="子狀態", value=err["sub_status"] if err["status"] == 530 else "")
                 embed.add_embed_field(name="網址", value=err["url"])
             else:
                 embed.add_embed_field(name="", value=err["name"])
                 embed.add_embed_field(name="", value=err["status"])
+                embed.add_embed_field(name="", value=err["sub_status"] if err["status"] == 530 else "")
                 embed.add_embed_field(name="", value=err["url"])
 
         return embed
@@ -75,6 +85,14 @@ class WebsiteMonitor:
         while True:
             schedule.run_pending()
             time.sleep(1)
+
+    def parse_cloudflare_error(self, content):
+        print("Sample CF Error:", content)
+        error_match = re.search(r'Error\s+1(\d{3})', content, re.IGNORECASE)
+        if error_match:
+            error_code = int("1" + error_match.group(1))
+            return error_code
+        return 9999
 
 if __name__ == "__main__":
     discord_webhook_url = os.environ.get("DC_WEBHOOK_URL")
