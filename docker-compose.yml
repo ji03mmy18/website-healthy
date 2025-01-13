@@ -3,3 +3,8 @@ services:
     build: .
     environment:
       - DC_WEBHOOK_URL=<url here>
+      - TZ=Asia/Taipei
+    volumes:
+      - type: bind
+        source: ./site.csv
+        target: /app/site.csv
