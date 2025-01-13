@@ -1,7 +1,7 @@
 import requests, schedule
 from discord_webhook import DiscordWebhook, DiscordEmbed
 
-import os, time, logging
+import csv, os, time, logging
 
 FORMAT = '[%(asctime)s]%(levelname)s: %(message)s'
 logging.basicConfig(level=logging.INFO, format=FORMAT)
@@ -82,13 +82,15 @@ if __name__ == "__main__":
     logging.info("Website Healthy Checker Started!")
 
     # 要監控的網站
-    monitor.add_website("[雲科大]管理學院", "https://www.cm.yuntech.edu.tw")
-    monitor.add_website("[雲科大]產業經營專業博士學位學程", "https://www.dba.cm.yuntech.edu.tw")
-    monitor.add_website("[雲科大]高階管理碩士學位學程", "https://www.emba.cm.yuntech.edu.tw")
-    monitor.add_website("[雲科大]EMI雙語計畫", "https://emi.cm.yuntech.edu.tw")
-    monitor.add_website("[雲科大]工商管理學士學位學程", "https://www.nd.cm.yuntech.edu.tw")
-    monitor.add_website("[雲科大]師培中心", "https://tec.justech.com.tw")
-    monitor.add_website("[雲科大]技職所", "https://www.tve.yuntech.edu.tw")
+    if os.path.isfile('site.csv'):
+        with open('site.csv') as sitefile:
+            reader = csv.reader(sitefile, skipinitialspace=True)
+            for row in reader:
+                monitor.add_website(row[0], row[1])
+    else:
+        print("未找到站點CSV檔案!")
+        exit()
+
     logging.info("Website Loadded")
 
     # 開始監控
